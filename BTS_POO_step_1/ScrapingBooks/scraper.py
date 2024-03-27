@@ -149,21 +149,49 @@ class DataExtractor(Scraper):
             except Exception:
                 return None  
         return None
-
+    
+    def extract_category_urls(self):
+        """Extrait et retourne les URLs des catégories depuis l'URL principale du site."""
+        self.soup = None  # Réinitialise soup pour forcer un nouveau fetch de la page principale
+        soup = self.fetch_soup()
+        if soup:
+            category_urls = [urljoin(self.url, li.a['href']) for li in soup.find('ul', class_='nav-list').find_all('li')][1:]
+            return category_urls
+        else:
+            return []
+        
+    def extract_book_urls_from_category(self):
+        """Extrait et retourne les URLs des livres d'une catégorie."""
+        while True:
+            soup = self.fetch_soup()  # Assurez-vous d'avoir le BeautifulSoup de la page de catégorie
+            if soup:
+                book_urls = [
+                    urljoin("https://books.toscrape.com/catalogue/", book.find('a')['href'][9:]) 
+                    for book in soup.find_all('h3')
+                ]
+                next_button = soup.find(class_='next')
+                if next_button:
+                    next_page_partial = next_button.find('a')['href']
+                    category_url = urljoin(category_url, next_page_partial)
+                else :
+                    break
+                return book_urls
+            else:
+                return []
 
 # Instanciation de DataExtractor avec l'URL d'une page produit spécifique
-data_extractor = DataExtractor("https://books.toscrape.com/catalogue/throwing-rocks-at-the-google-bus-how-growth-became-the-enemy-of-prosperity_948/index.html")
+# data_extractor = DataExtractor("https://books.toscrape.com/catalogue/throwing-rocks-at-the-google-bus-how-growth-became-the-enemy-of-prosperity_948/index.html")
 
-# Appel des méthodes d'extraction
-title = data_extractor.extract_title()
-upc = data_extractor.extract_upc()
-price_incl_tax = data_extractor.extract_price_including_tax()
-price_excl_tax = data_extractor.extract_price_excluding_tax()
-review_rating = data_extractor.extract_review_rating()
-category = data_extractor.extract_category()
-avaibility = data_extractor.extract_availability()
-image_url = data_extractor.extract_image_url()
-product_description = data_extractor.extrac_product_description()
+# # Appel des méthodes d'extraction
+# title = data_extractor.extract_title()
+# upc = data_extractor.extract_upc()
+# price_incl_tax = data_extractor.extract_price_including_tax()
+# price_excl_tax = data_extractor.extract_price_excluding_tax()
+# review_rating = data_extractor.extract_review_rating()
+# category = data_extractor.extract_category()
+# avaibility = data_extractor.extract_availability()
+# image_url = data_extractor.extract_image_url()
+# product_description = data_extractor.extrac_product_description()
 
 # Affichage des résultats
 # print("Title:", title)
@@ -176,17 +204,29 @@ product_description = data_extractor.extrac_product_description()
 # print("Image URL:", image_url)
 # print("Product Description:", product_description)
 
-book_info = Book(
-    title=title,
-    upc=upc,
-    price_incl_tax=price_incl_tax,
-    price_excl_tax=price_excl_tax,
-    review_rating=review_rating,
-    category=category,
-    image_url=image_url,
-    product_description=product_description
-)
+# book_info = Book(
+#     title=title,
+#     upc=upc,
+#     price_incl_tax=price_incl_tax,
+#     price_excl_tax=price_excl_tax,
+#     review_rating=review_rating,
+#     category=category,
+#     image_url=image_url,
+#     product_description=product_description
+# )
 
-# Récupération des données du livre sous forme de dictionnaire
-book_data = book_info.to_dict()
-print(book_data)
+# # Récupération des données du livre sous forme de dictionnaire
+# book_data = book_info.to_dict()
+# print(book_data)
+
+
+url = "https://books.toscrape.com/"
+data_extractor = DataExtractor(url)
+    
+# category_urls = data_extractor.extract_category_urls()
+# print(category_urls)
+
+
+data_extractor.set_url("https://books.toscrape.com/catalogue/category/books/travel_2/index.html")
+book_urls = data_extractor.extract_book_urls_from_category()
+print(book_urls)
