@@ -14,6 +14,20 @@ class Scraper:
         self.soup = None  # Initialiser la propriété soup à None
 
     def set_url(self, url):
+        """
+    Met à jour l'URL cible pour le scraping et réinitialise l'état de BeautifulSoup.
+
+    Cette méthode permet de changer dynamiquement l'URL cible du scraper sans nécessiter
+    une nouvelle instance de l'objet. Elle est particulièrement utile pour naviguer à travers
+    les pages web lors du scraping, permettant au scraper de se concentrer sur différentes pages
+    en utilisant une seule instance de l'objet.
+
+    Paramètres:
+    - url (str): L'URL cible à définir pour les prochaines opérations de scraping.
+
+    Retour:
+    - None
+    """
         self.url = url
         self.soup = None
 
@@ -160,8 +174,13 @@ class DataExtractor(Scraper):
         else:
             return []
         
+    
+    
     def extract_book_urls_from_category(self):
-        """Extrait et retourne les URLs des livres d'une catégorie."""
+        """Extrait et retourne les URLs des livres d'une catégorie. Gère également la pagination
+        si nécessaire (cas des catégories ayant plusieurs pages de livres)
+        """
+        all_books_urls = [] # Stocke les URLs de tous les livres trouvés dans la categorie
         while True:
             soup = self.fetch_soup()  # Assurez-vous d'avoir le BeautifulSoup de la page de catégorie
             if soup:
@@ -169,15 +188,22 @@ class DataExtractor(Scraper):
                     urljoin("https://books.toscrape.com/catalogue/", book.find('a')['href'][9:]) 
                     for book in soup.find_all('h3')
                 ]
-                next_button = soup.find(class_='next')
+                all_books_urls.extend(book_urls) # Ajoute les URLs extraites à la liste globale
+                # Vérification de l'existence d'une page suivante
+                next_button = soup.find('li', class_ ='next')
                 if next_button:
-                    next_page_partial = next_button.find('a')['href']
-                    category_url = urljoin(category_url, next_page_partial)
-                else :
-                    break
-                return book_urls
+                    next_page_partial_url = next_button.find('a')['href']
+                    # Construction de l'RUL de la page suivante
+                    next_page_url = urljoin(self.url, next_page_partial_url)
+                    self.set_url(next_page_url) # Mise à jour de l'URL pour charger la page suivante
+                else:
+                    break # Sortie de la boucle si aucune page n'est trouvée
             else:
-                return []
+                break # Sortie de la boucle en cas d'erreur lors du fetching
+        self.soup = None # Réinitialisation de soup après avoir terminé la pagination
+        return all_books_urls
+             
+
 
 # Instanciation de DataExtractor avec l'URL d'une page produit spécifique
 # data_extractor = DataExtractor("https://books.toscrape.com/catalogue/throwing-rocks-at-the-google-bus-how-growth-became-the-enemy-of-prosperity_948/index.html")
@@ -227,6 +253,7 @@ data_extractor = DataExtractor(url)
 # print(category_urls)
 
 
-data_extractor.set_url("https://books.toscrape.com/catalogue/category/books/travel_2/index.html")
-book_urls = data_extractor.extract_book_urls_from_category()
-print(book_urls)
+data_extractor.set_url("https://books.toscrape.com/catalogue/category/books/add-a-comment_18/index.html")
+all_book_urls = data_extractor.extract_book_urls_from_category()
+print(all_book_urls)
+print(len(all_book_urls))
