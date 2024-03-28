@@ -90,7 +90,7 @@ class DataExtractor(Scraper):
         """
         soup = self.fetch_soup()
         if soup:
-            try : 
+            try: 
                 price_excluding_tax = soup.find_all('tr')[2].td.text.strip()[1:] 
                 return float(price_excluding_tax)
             except Exception:
