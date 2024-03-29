@@ -9,6 +9,22 @@ from utils import clean_filename
 
 
 class Book:
+    """ 
+    Représente un livre extrait du site web.
+
+    Attributs :
+        product_book_url (str): URL de la page du livre.
+        title (str): Titre du livre.
+        upc (str): Code produit universel du livre.
+        price_incl_tax (float): Prix du livre incluant les taxes.
+        price_excl_tax (float): Prix du livre excluant les taxes.
+        availability (int): Nombre d'exemplaires disponibles.
+        review_rating (int): Évaluation du livre (1 à 5).
+        category (str): Catégorie du livre.
+        image_url (str): URL de l'image de couverture du livre.
+        product_description (str): Description du livre.
+    """
+
     def __init__(self, product_book_url=None, title=None, upc=None, price_incl_tax=None, 
                  price_excl_tax=None, availability=None, review_rating=None, category=None, 
                  image_url=None, product_description=None):
@@ -24,7 +40,12 @@ class Book:
         self.product_description = product_description
 
     def to_dict(self):
-        """Renvoie les données du livre sous forme de dictionnaire."""
+        """
+        Convertit les attributs du livre en un dictionnaire.
+
+        Returns:
+            dict: Dictionnaire contenant les données du livre
+        """
         return {
             'product_book_url': self.product_book_url,
             'title': self.title,
@@ -41,6 +62,20 @@ class Book:
     
     
     def fetch_image_with_retries(self, url, max_retries=3, timeout=10):
+        """ 
+        Télécharge une image en effectuant jusqu'à `max_retries` tentatives.
+
+        Args:
+            url (str): URL de l'image à télécharger.
+            max_retries (int): Nombre maximal de tentatives de téléchargement.
+            timeout (int): Temps d'attente maximal pour chaque tentative, en secondes.
+
+        Returns:
+            response: L'objet Response contenant les données de l'image en cas de succès.
+
+        Raises:
+            ConnectionError: En cas d'échec après `max_retries` tentatives.
+        """
         retries = 0
         while retries < max_retries:
             try:
@@ -55,6 +90,18 @@ class Book:
     
     
     def save_cover_image(self, base_directory='book_images'):
+        """
+        Sauvegarde l'image de couverture du livre dans le répertoire spécifié.
+
+        L'image est sauvegardée dans un sous-répertoire correspondant à la catégorie du livre,
+        et le nom du fichier est basé sur l'UPC du livre.
+
+        Args:
+            base_directory (str): Chemin du répertoire de base pour les images sauvegardées.
+
+        Note:
+            Si le téléchargement de l'image échoue après plusieurs tentatives, un message d'erreur est affiché. 
+        """
         category_cleaned = clean_filename(self.category)
         image_save_path = os.path.join(base_directory, category_cleaned, f"{self.upc}.jpg")
 

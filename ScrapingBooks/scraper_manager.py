@@ -6,11 +6,43 @@ from utils import clean_filename
 
 
 class ScraperManager:
+    """ 
+    Coordonne l'extraction des données de livres depuis un site web et la sauvegarde des résultats.
+
+    Attributes:
+        base_url (str): URL de base du site web à scraper.
+        data_extractor (DataExtractor): Instance de DataExtractor utilisée pour extraire les données.
+    
+    """
     def __init__(self, base_url):
+        """ 
+        Initialise ScraperManager avec une URL de base pour le scraping.
+
+        Parameters:
+            base_url (str): L'URL de base du site web à scraper.
+        """
         self.base_url = base_url
         self.data_extractor = DataExtractor(self.base_url)
     
     def extract_all_books(self):
+        """ 
+        Orchestre le processus complet d'extraction des données des livres depuis le site web ciblé.
+
+        Pour chaque catégorie trouvée sur le site, cette méthode extrait les URLs des livres et 
+        collecte les données essentielles de chaque livre, y compris l'URL de l'image de couverture.
+        Chaque livre est ensuite instancié en tant qu'objet Book, ses données étant collectées dans une 
+        liste. Pour chaque catégorie, les images de couverture des livres sont sauvegardées localement,
+        et les données des livres sont exportées dans un fichier CSV spécifique à la catégorie.
+
+        Cette méthode s'appuie sur DataExtractor pour l'extraction des URLs des catégories, des URLs des livres
+        par catégorie, et des données détaillées pour chaque livre. Elle utilise également la fonctionnalité de
+        Book pour sauvegarder les images de couverture et utilise une méthode interne pour exporter les données
+        des livres en CSV.
+
+        Les fichiers CSV sont sauvegardés dans un répertoire 'datas_csv', et les images sont sauvegardées dans
+        un répertoire 'book_images', tous deux créés à la racine du projet s'ils n'existent pas déjà. Les sous-répertoires
+        pour les images suivent la structure de catégorisation des livres, permettant une organisation claire des fichiers.
+        """
         # Étape 1: Extraire les URLs de toutes les catégories
         category_urls = self.data_extractor.extract_category_urls()
         
@@ -48,6 +80,14 @@ class ScraperManager:
 
 
     def save_books_to_csv(self, books, category):
+        """
+        Sauvegarde les données d'une liste de livres dans un fichier CSV, organisé par catégorie.
+
+        Parameters:
+            books (list): Liste des instances de Book contenant les données à sauvegarder.
+            category (str): La catégorie des livres, utilisée pour nommer le fichier CSV.
+        
+        """
         directory = 'datas_csv'
         category_cleaned = clean_filename(category)
         os.makedirs(directory, exist_ok=True)

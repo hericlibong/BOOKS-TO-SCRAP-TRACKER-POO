@@ -7,8 +7,27 @@ from urllib.parse import urljoin
 
 
 class Scraper:
-    """Crée et configure le Scraper"""
+    """
+    Classe de base pour créer et configurer un scraper.
+
+    Attributs :
+        url (str): URL cible pour le scraping.
+        headers (dict): En-têtes HTTP à utiliser pour les requêtes.
+        soup (BeautifulSoup): Objet BeautifulSoup pour le parsing HTML.
+
+    Méthodes :
+        __init__: Initialise un nouvel objet Scraper.
+        set_url: Met à jour l'URL cible du scraper.
+        fetch_soup: Récupère et parse le contenu HTML de l'URL cible.
+    """
     def __init__(self, url=None, headers=None):
+        """
+        Initialise un nouvel objet Scraper avec une URL et des en-têtes optionnels.
+
+        Paramètres :
+            url (str, optionnel): URL cible pour le scraping.
+            headers (dict, optionnel): En-têtes HTTP à utiliser pour les requêtes.
+        """
         self.url = url
         self.headers = headers if headers else {'User-Agent': 'Mozilla/5.0'}
         self.soup = None  # Initialiser la propriété soup à None
@@ -32,7 +51,19 @@ class Scraper:
         self.soup = None
 
     def fetch_soup(self):
-            """Extrait le contenu HTML et le parse, stocke le résultat dans self.soup."""
+            """
+        Extrait le contenu HTML de l'URL cible et le parse, stockant le résultat dans `self.soup`.
+
+        Cette méthode fait une requête HTTP GET à l'URL cible, utilise BeautifulSoup pour parser
+        le contenu HTML, et met à jour l'attribut `self.soup` avec le nouveau BeautifulSoup
+        object.
+
+        Retour :
+            BeautifulSoup: Un nouvel objet BeautifulSoup représentant le contenu HTML parse de l'URL cible.
+
+        Lève :
+            requests.RequestException: Si une erreur survient lors de la récupération ou du parsing du contenu.
+        """
             if not self.soup:  # Si soup n'est pas déjà défini
                 try:
                     response = requests.get(self.url, headers=self.headers)
@@ -44,7 +75,25 @@ class Scraper:
             return self.soup
 
 class DataExtractor(Scraper):
-    """Gère l'extraction des données; hérite de Scraper"""
+    """
+    Classe dérivée de Scraper spécifiquement pour l'extraction de données à partir des pages web.
+
+    Hérite de :
+        Scraper
+
+    Méthodes :
+        extract_title: Extrait le titre de la page.
+        extract_upc: Extrait le code produit universel (UPC) de la page du produit.
+        extract_price_including_tax: Extrait le prix du livre incluant les taxes.
+        extract_price_excluding_tax: Extrait le prix du livre hors taxes.
+        extract_review_rating: Extrait la notation en étoiles du produit.
+        extract_category: Extrait la catégorie du produit.
+        extract_availability: Extrait l'information de disponibilité du produit.
+        extract_image_url: Extrait l'URL de l'image du produit.
+        extrac_product_description: Extrait la description du produit.
+        extract_category_urls: Extrait les URLs de toutes les catégories à partir de la page principale.
+        extract_book_urls_from_category: Extrait et retourne les URLs de tous les livres d'une catégorie donnée, en gérant la pagination si nécessaire.
+    """
 
     def extract_title(self):
         """Extrait et transforme la casse titre"""
@@ -70,7 +119,12 @@ class DataExtractor(Scraper):
 
     
     def extract_price_including_tax(self):
-        """Extrait le prix du livre incluant les taxes en float"""
+        """
+        Extrait le prix du livre taxes incluses
+        
+        Returns:
+            le prix en float ou None en cas d'erreur
+        """
         soup = self.fetch_soup()
         if soup:
             try:
@@ -99,29 +153,52 @@ class DataExtractor(Scraper):
             
     
     def extract_review_rating(self):
-        words_to_nums = {'One': 1, 'Two': 2, 'Three': 3, 'Four': 4, 'Five': 5} # Dictionnaire pour convertir les mots en chiffre
-        soup = self.fetch_soup()
+        """
+        Extrait la notation en étoiles du produit à partir de la page actuellement chargée.
+
+        Returns :
+            int: La notation du produit en nombre d'étoiles (1 à 5) si trouvée, sinon 0.
+            None: Si la page n'a pas pu être chargée ou si la notation en étoiles n'est pas présente.
+
+        Raise :
+            Exception: Si une erreur inattendue survient lors de l'extraction de la notation.
+        """
+        words_to_nums = {'One': 1, 'Two': 2, 'Three': 3, 'Four': 4, 'Five': 5}  # Dictionnaire pour la conversion texte à chiffre
+        soup = self.fetch_soup()  # Tente de récupérer le contenu HTML parse de la page
         if soup:
-            try : 
-                rating_word = soup.find('p', class_='star-rating')['class'][1]
-                # Convertir le mot en nombre en utilisant le dictionnaire
-                return words_to_nums.get(rating_word, 0)  #Retourne la valeur de la clé si celle-ci est dans le dictionnaire. Si la clé n'est pas présente, la valeur est 0
+            try:
+                rating_word = soup.find('p', class_='star-rating')['class'][1]  # Extrait le mot correspondant à la notation
+                return words_to_nums.get(rating_word, 0)  # Convertit le mot en nombre et retourne 0 si non trouvé
             except Exception:
-                return None
-        return None    
-            
+                return None  # Retourne None si une erreur survient (par exemple, élément non trouvé)
+        return None  # Retourne None si `soup` n'est pas défini (page non chargée)
+
     
     def extract_category(self):
+        """
+        Extrait la catégorie du produit depuis la page chargée.
+
+        Returns :
+            str: La catégorie du produit si trouvée, sinon None en cas d'erreur ou d'absence.
+        """
         soup = self.fetch_soup()
         if soup:
-            try : 
+            try:
+                # Extrait le nom de la catégorie basé sur la structure prévue du breadcrumb.
                 return soup.find('ul', class_='breadcrumb').find_all('a')[2].text.strip()
             except Exception:
-                return None
-        return None
+                return None  # Gestion sécurisée en cas de structure HTML inattendue.
+        return None  # Soup n'est pas défini indique un échec de fetch ou d'analyse.
+
     
 
     def extract_availability(self):
+        """
+        Extrait la disponibilité du produit (availability).
+
+        Returns :
+            str: Availability du produit si trouvée, sinon None en cas d'erreur ou d'absence.
+        """
         soup = self.fetch_soup()
         if soup:
             try :
@@ -134,6 +211,13 @@ class DataExtractor(Scraper):
         
     
     def extract_image_url(self):
+        """
+        Extrait l'URL absolue de l'image principale du produit sur la page web courante.
+
+        Returns :
+            str: L'URL absolue de l'image du produit si trouvée, sinon None si une erreur survient
+            ou si l'élément n'est pas trouvé dans le document HTML.
+        """
         base_url = 'https://books.toscrape.com/'
         soup = self.fetch_soup()
         if soup:
@@ -147,6 +231,14 @@ class DataExtractor(Scraper):
         
     
     def extrac_product_description(self):
+        """ 
+        Extrait le texte de description du produit sur la page web courante.
+
+        Returns:
+            str: La description du produit nettoyée et décodée, si trouvée. Retourne None si la description
+            n'est pas trouvée ou si une erreur survient lors de l'extraction.   
+        
+        """
         soup = self.fetch_soup()
         if soup:
             try :
