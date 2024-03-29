@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from unidecode import unidecode
 import re
 from urllib.parse import urljoin
-from books import Book
+
 
 
 class Scraper:

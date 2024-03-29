@@ -1,3 +1,6 @@
+from utils import clean_filename
+import os, requests
+
 
 
 class Book:
@@ -29,3 +32,16 @@ class Book:
             'image_url': self.image_url,
             'product_description': self.product_description,
         }
+    
+    def save_cover_image(self, base_directory='book_images'):
+        category_cleaned = clean_filename(self.category)
+        image_save_path = os.path.join(base_directory, category_cleaned, f"{self.upc}.jpg")
+
+        response = requests.get(self.image_url)
+        if response.status_code == 200:
+            os.makedirs(os.path.dirname(image_save_path), exist_ok=True)
+            with open(image_save_path, 'wb') as file:
+                file.write(response.content)
+        else:
+            print(f"Erreur de du téléchargement de l'image pour {self.upc}")
+

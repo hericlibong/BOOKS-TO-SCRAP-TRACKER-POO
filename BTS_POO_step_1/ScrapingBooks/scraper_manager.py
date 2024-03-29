@@ -1,6 +1,9 @@
 # scraper_manager.py
-from scraper import DataExtractor
+from data_extractor import DataExtractor
 from books import Book
+import os, csv
+from utils import clean_filename
+
 
 class ScraperManager:
     def __init__(self, base_url):
@@ -31,9 +34,29 @@ class ScraperManager:
                     'image_url': self.data_extractor.extract_image_url(),
                     'product_description': self.data_extractor.extrac_product_description(),
                 }
-                book = Book(**book_data)
-                self.save_book(book)
-                print(book.to_dict())
+                # book = Book(**book_data)
+                # self.save_book(book)
+                # print(book.to_dict())
+                print(book_data)
+
+
+    
+
+    
+    def save_books_to_csv(self, books, category):
+        directory = 'datas_csv'
+        category_cleaned = clean_filename(category)
+        os.makedirs(directory, exist_ok=True)
+        filename = os.path.join(directory, f"{category_cleaned}.csv")
+
+        with open(filename, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.DictWriter(file, fieldnames=books[0].keys())
+            writer.writeheader()
+            for book in books:
+                writer.writerow(book.to_dict())
+
+    
+    
     
     def save_book(self, book):
         # Méthode pour sauvegarder les données du livre
