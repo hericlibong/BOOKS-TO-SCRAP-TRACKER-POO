@@ -18,6 +18,7 @@ class ScraperManager:
         for category_url in category_urls:
             self.data_extractor.set_url(category_url)
             book_urls = self.data_extractor.extract_book_urls_from_category()
+            books = [] # Liste pour stocker les données des livres
             
             # Étape 3: Pour chaque URL de livre, extraire les données du livre et créer une instance de Book
             for book_url in book_urls:
@@ -34,15 +35,18 @@ class ScraperManager:
                     'image_url': self.data_extractor.extract_image_url(),
                     'product_description': self.data_extractor.extrac_product_description(),
                 }
-                # book = Book(**book_data)
-                # self.save_book(book)
-                # print(book.to_dict())
+                book = Book(**book_data)
+                books.append(book)
+                book.save_cover_image() # Sauvegarde l'image de couverture pour chaque livre
                 print(book_data)
+            
+            # À ce point, tous les livres d'une catégorie ont été traités
+            # Sauvegarde les données des livres dans un fichier CSV   
+            if books:
+                self.save_books_to_csv(books, book_data['category'])
 
 
-    
 
-    
     def save_books_to_csv(self, books, category):
         directory = 'datas_csv'
         category_cleaned = clean_filename(category)
@@ -50,7 +54,8 @@ class ScraperManager:
         filename = os.path.join(directory, f"{category_cleaned}.csv")
 
         with open(filename, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=books[0].keys())
+            fieldnames = books[0].to_dict().keys()  # Utilise to_dict() pour obtenir les noms de champs
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             for book in books:
                 writer.writerow(book.to_dict())
@@ -58,7 +63,4 @@ class ScraperManager:
     
     
     
-    def save_book(self, book):
-        # Méthode pour sauvegarder les données du livre
-        # À implémenter selon les besoins (fichier CSV, base de données, etc.)
-        pass
+  
