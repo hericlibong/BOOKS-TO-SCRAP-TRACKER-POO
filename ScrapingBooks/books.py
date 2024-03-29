@@ -1,5 +1,10 @@
+from requests.exceptions import ConnectionError, Timeout
+import requests
+import time
+import os
 from utils import clean_filename
-import os, requests
+
+
 
 
 
@@ -33,15 +38,36 @@ class Book:
             'product_description': self.product_description,
         }
     
+    
+    
+    def fetch_image_with_retries(self, url, max_retries=3, timeout=10):
+        retries = 0
+        while retries < max_retries:
+            try:
+                response = requests.get(url, timeout=timeout)
+                response.raise_for_status()
+                return response # Succès, retourne la réponse
+            except (ConnectionError, Timeout) as e:
+                print(f"Tentative {retries + 1}/{max_retries} échouée pour {url}: {e}")               
+                retries +=1
+                time.sleep(2) 
+        raise ConnectionError(f"Echec après {max_retries} tentatives pour {url}")
+    
+    
     def save_cover_image(self, base_directory='book_images'):
         category_cleaned = clean_filename(self.category)
         image_save_path = os.path.join(base_directory, category_cleaned, f"{self.upc}.jpg")
 
-        response = requests.get(self.image_url)
-        if response.status_code == 200:
+        try:
+            #response = requests.get(self.image_url, timeout=10) # Ajout d'un timeout
+            #response.raise_for_status() # Vérifie si la réponse est une erreur
+            response = self.fetch_image_with_retries(self.image_url) # Utilise la méthode avec tentatives de connexions 
             os.makedirs(os.path.dirname(image_save_path), exist_ok=True)
             with open(image_save_path, 'wb') as file:
                 file.write(response.content)
-        else:
-            print(f"Erreur de du téléchargement de l'image pour {self.upc}")
+            print(f"Image sauvegardée : {image_save_path}")
+        except ConnectionError as e:
+            print(f"Erreur de du téléchargement de l'image pour {self.upc} après plusieurs tentatives : {e}")
+        except Exception as e:
+            print(f"Erreur lors du téléchargement de l'image pour {self.upc} : {e}")
 
