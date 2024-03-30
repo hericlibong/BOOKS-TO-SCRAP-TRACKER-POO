@@ -97,14 +97,14 @@ class DataExtractor(Scraper):
 
     def extract_title(self):
         """Extrait et transforme la casse titre"""
-        soup = self.fetch_soup()  # Assurez-vous d'avoir le dernier soup disponible
+        soup = self.fetch_soup() 
         if soup:  # Vérifier que soup n'est pas None
             try:
                 title = soup.find('h1').text.strip()
                 return title.lower()
             except Exception:
-                return None
-        return None
+                return None  # Retourne None si une erreur survient (par exemple, élément non trouvé)
+        return None # Retourne None si `soup` n'est pas défini (page non chargée)
 
     
     def extract_upc(self):
@@ -164,14 +164,14 @@ class DataExtractor(Scraper):
             Exception: Si une erreur inattendue survient lors de l'extraction de la notation.
         """
         words_to_nums = {'One': 1, 'Two': 2, 'Three': 3, 'Four': 4, 'Five': 5}  # Dictionnaire pour la conversion texte à chiffre
-        soup = self.fetch_soup()  # Tente de récupérer le contenu HTML parse de la page
+        soup = self.fetch_soup()  
         if soup:
             try:
                 rating_word = soup.find('p', class_='star-rating')['class'][1]  # Extrait le mot correspondant à la notation
                 return words_to_nums.get(rating_word, 0)  # Convertit le mot en nombre et retourne 0 si non trouvé
             except Exception:
-                return None  # Retourne None si une erreur survient (par exemple, élément non trouvé)
-        return None  # Retourne None si `soup` n'est pas défini (page non chargée)
+                return None 
+        return None  
 
     
     def extract_category(self):
@@ -187,9 +187,8 @@ class DataExtractor(Scraper):
                 # Extrait le nom de la catégorie basé sur la structure prévue du breadcrumb.
                 return soup.find('ul', class_='breadcrumb').find_all('a')[2].text.strip()
             except Exception:
-                return None  # Gestion sécurisée en cas de structure HTML inattendue.
-        return None  # Soup n'est pas défini indique un échec de fetch ou d'analyse.
-
+                return None  
+        return None  
     
 
     def extract_availability(self):
