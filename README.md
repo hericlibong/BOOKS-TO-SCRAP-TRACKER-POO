@@ -1,5 +1,10 @@
 # Books to Scrape - Price Tracker - Version Programmation Orientée Objet
 
+<p align="center">
+  <img src="medias/book_to_scrap_poo.PNG" alt="chess-picture">
+</p>
+
+
 ## Présentation
 "Books to Scrape - Price Tracker" est un programme Python conçu pour extraire les données des livres à partir du site fictif "Books to Scrape". Utilisant une approche de **Programmation Orientée Objets (POO)**, le programme navigue à travers les pages du site, extrait les informations détaillées de chaque livre, incluant le titre, le prix, le stock, la catégorie, la note des utilisateurs, et l'URL de l'image de couverture. Les données extraites sont sauvegardées dans des fichiers CSV par catégorie et les images de couverture sont téléchargées localement.
 
@@ -75,3 +80,12 @@ python main.py
 
 - Récupérer les fichiers csv dans `datas_csv`
 - Récupérer les couvertures au format jpg dans `book_images`
+
+## Génération du rapport Flake html
+
+```
+SrapingBooks/flake8 --format=html --htmldir=report_html
+
+```
+
+![flake8_report](medias/flake8_report.PNG)
