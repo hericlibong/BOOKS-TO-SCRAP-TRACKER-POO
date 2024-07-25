@@ -1,7 +1,7 @@
 # Books to Scrape - Price Tracker - Version Programmation Orientée Objet
 
 <p align="center">
-  <img src="medias/book_to_scrap_poo.PNG" alt="chess-picture">
+  <img src="medias/book_to_scrap_poo.PNG" alt="book to scrap">
 </p>
 
 
